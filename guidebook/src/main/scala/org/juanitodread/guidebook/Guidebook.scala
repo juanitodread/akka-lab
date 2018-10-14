@@ -2,11 +2,11 @@ package org.juanitodread.guidebook
 
 import java.util.{ Currency, Locale }
 
-import akka.actor.Actor
+import akka.actor.{ Actor, ActorLogging }
 import org.juanitodread.guidebook.Guidebook.Inquiry
 import org.juanitodread.guidebook.Tourist.Guidance
 
-class Guidebook extends Actor {
+class Guidebook extends Actor with ActorLogging {
 
   def describe(locale: Locale): String = {
     s"""
@@ -18,7 +18,7 @@ class Guidebook extends Actor {
 
   override def receive: Receive = {
     case Inquiry(code) =>
-      println(s"Actor :${self.path.name} responding to inquiry about $code")
+      log.info(s"Actor :${self.path.name} responding to inquiry about $code")
       Locale.getAvailableLocales
         .filter(locale => locale.getCountry == code)
         .foreach(locale => sender ! Guidance(code, describe(locale)))
