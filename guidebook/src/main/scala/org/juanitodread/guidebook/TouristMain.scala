@@ -15,7 +15,7 @@ object TouristMain {
   def main(args: Array[String]): Unit = {
     val system: ActorSystem = ActorSystem("TouristActorSystem")
 
-    val path = "akka.tcp://GuidebookActorSystem@127.0.0.1:8081/user/GuidebookActor"
+    val path = "akka.tcp://GuidebookActorSystem@127.0.0.1:8081/user/guidebook"
     implicit val timeout: Timeout = Timeout(5, SECONDS)
 
     system.actorSelection(path).resolveOne.onComplete {
