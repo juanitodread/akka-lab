@@ -1,21 +1,24 @@
 package org.juanitodread.guidebook
 
-import akka.actor.{ Actor, ActorLogging, ActorRef }
+import akka.actor.typed.ActorRef
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.Behaviors
+
 import org.juanitodread.guidebook.Guidebook.Inquiry
-import org.juanitodread.guidebook.Tourist.{ Guidance, Start }
-
-class Tourist(guidebook: ActorRef) extends Actor with ActorLogging {
-
-  override def receive: Receive = {
-    case Start(codes) =>
-      codes.foreach(code => guidebook ! Inquiry(code))
-    case Guidance(code, description) =>
-      log.info(s"$code: $description")
-  }
-
-}
 
 object Tourist {
-  case class Guidance(code: String, description: String)
-  case class Start(codes: Array[String])
+  sealed trait TouristProtocol
+  final case class Start(codes: Array[String], replyTo: ActorRef[Inquiry]) extends TouristProtocol
+  final case class Guidance(code: String, description: String) extends TouristProtocol
+
+  def apply(): Behavior[TouristProtocol] = Behaviors.receive { (context, message) =>
+    message match {
+      case Start(codes, replyTo) =>
+        codes.foreach(code => replyTo ! Inquiry(code, context.self))
+        Behaviors.same
+      case Guidance(code, description) =>
+        context.log.info(s"$code: $description")
+        Behaviors.same
+    }
+  }
 }

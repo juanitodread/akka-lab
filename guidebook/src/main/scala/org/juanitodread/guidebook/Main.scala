@@ -2,22 +2,27 @@ package org.juanitodread.guidebook
 
 import java.util.Locale
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
-import org.juanitodread.guidebook.Tourist.Start
+import akka.actor.typed.ActorSystem
+import org.juanitodread.guidebook.TouristMain.SayStart
+import org.slf4j.{ Logger, LoggerFactory }
 
 object Main {
+  private val log: Logger = LoggerFactory.getLogger(Main.toString)
 
   def main(args: Array[String]): Unit = {
-    println("Starting the actor system...")
+    log.info("Starting the actor system...")
 
-    val system: ActorSystem = ActorSystem("GuideSystem")
+    val touristMain: ActorSystem[SayStart] = ActorSystem(TouristMain(), "GuideSystem")
 
-    val guideProps: Props = Props[Guidebook]
-    val guidebook: ActorRef = system.actorOf(guideProps, "guidebook")
+    val countriesGroup = Locale
+      .getISOCountries
+      .grouped(Locale.getISOCountries.length / 3)
 
-    val touristProps: Props = Props(classOf[Tourist], guidebook)
-    val tourist: ActorRef = system.actorOf(touristProps, "tourist")
-
-    tourist ! Start(Locale.getISOCountries)
+    countriesGroup
+      .zipWithIndex
+      .foreach {
+        case (countries, index) =>
+          touristMain ! SayStart(countries, s"guidebook-$index")
+      }
   }
 }
