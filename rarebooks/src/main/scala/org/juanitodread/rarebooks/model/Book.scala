@@ -1,7 +1,5 @@
 package org.juanitodread.rarebooks.model
 
-import scala.concurrent.Await
-
 sealed trait Topic
 case object Novel extends Topic
 case object Horror extends Topic

@@ -1,19 +1,30 @@
 package org.juanitodread.rarebooks.actors
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import org.juanitodread.rarebooks.actors.protocol.RareBooks.FindBookByTitle
+import akka.actor.{ Actor, ActorLogging, Props, Stash }
+import org.juanitodread.rarebooks.actors.protocol.RareBooks.Message
+import org.juanitodread.rarebooks.actors.RareBooks.{ Close, Open }
 
-class RareBooks extends Actor with ActorLogging {
-  private val librarian = createLibrarian()
+class RareBooks extends Actor with ActorLogging with Stash {
+  private val librarian = context.actorOf(Librarian.props, "librarian-actor")
 
-  override def receive: Receive = {
-    case findBookByTitle: FindBookByTitle =>
-      log.info("Received findBookByTitle message: {}", findBookByTitle)
-      librarian.forward(findBookByTitle)
+  override def receive: Receive = open
+
+  private def open: Receive = {
+    case message: Message =>
+      log.info("Message received and forwarded: {}", message)
+      librarian.forward(message)
+    case Close =>
+      log.info("RareBooks is closed. Wait for tomorrow")
+      context.become(closed)
   }
 
-  protected def createLibrarian(): ActorRef = {
-    context.actorOf(Librarian.props, "LibrarianActor")
+  private def closed: Receive = {
+    case Open =>
+      log.info("Time to open RareBooks")
+      unstashAll()
+      context.become(open)
+    case _ =>
+      stash()
   }
 }
 
