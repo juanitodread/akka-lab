@@ -2,7 +2,7 @@ package org.juanitodread.rarebooks.actors
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import org.juanitodread.rarebooks.actors.protocol.RareBooks.{ BookFound, BookNotFound, FindBookByTitle }
-import org.juanitodread.rarebooks.actors.RareBooks.{ Close, Open }
+import org.juanitodread.rarebooks.actors.RareBooks.{ Close, Open, Report }
 
 class Customer(rareBooks: ActorRef, title: String) extends Actor with ActorLogging {
   requestBookInfo()
@@ -11,13 +11,14 @@ class Customer(rareBooks: ActorRef, title: String) extends Actor with ActorLoggi
     case bookFound: BookFound =>
       log.info("Book found: {}", bookFound)
     case bookNotFound: BookNotFound =>
-      log.info("Book not found. Reason {}", bookNotFound.reason)
+      log.info("Book not found. Reason: {}", bookNotFound.reason)
   }
 
   private def requestBookInfo(): Unit = {
     title match {
       case "open" => rareBooks ! Open
       case "close" => rareBooks ! Close
+      case "report" => rareBooks ! Report
       case _ =>
         log.info("Requesting book info: title={}", title)
         rareBooks ! FindBookByTitle(title)
